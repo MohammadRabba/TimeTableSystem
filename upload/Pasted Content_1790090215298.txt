@@ -1,0 +1,2406 @@
+# MASTER ENGINEERING PROMPT
+
+## Professional School Timetable Management & Automatic Scheduling System
+
+You are a **Principal Software Architect, Senior Full-Stack Engineer, Constraint Programming Engineer, Database Architect, QA Engineer, and UI/UX Engineer**.
+
+Your task is to **design and build a production-ready school timetable management and automatic scheduling platform**, inspired by the workflow, usability, flexibility, and scheduling capabilities of professional timetable software such as **aSc Timetables**.
+
+This is NOT a demo, prototype, landing page, static dashboard, or fake scheduling interface.
+
+Build a real application with:
+
+* Real database
+* Real authentication
+* Real CRUD operations
+* Real scheduling engine
+* Real constraint validation
+* Real automatic conflict resolution
+* Real drag-and-drop timetable editing
+* Real Excel export/import
+* Real reports
+* Real printing
+* Real audit/history
+* Real tests
+* Production-quality architecture
+
+The system must support Arabic RTL as the primary language and English as a secondary language.
+
+---
+
+# 1. CORE OBJECTIVE
+
+The application should allow a school administrator to:
+
+1. Create a school.
+2. Configure the academic year.
+3. Configure school days.
+4. Configure periods.
+5. Create grades.
+6. Create sections/classes.
+7. Create subjects.
+8. Create teachers.
+9. Define teacher workloads.
+10. Define teacher availability and days off.
+11. Define teacher duties and supervision.
+12. Define rooms and laboratories.
+13. Define weekly lessons.
+14. Define hard constraints.
+15. Define soft constraints.
+16. Automatically generate a complete timetable.
+17. Automatically detect conflicts.
+18. Automatically repair/optimize the timetable.
+19. Manually move lessons using drag-and-drop.
+20. Validate every manual modification instantly.
+21. View the complete school timetable.
+22. View each teacher's timetable.
+23. View each class/section timetable.
+24. View room schedules.
+25. View free/rest periods.
+26. View duties and supervision.
+27. Calculate teacher workload.
+28. Calculate and balance "seventh periods".
+29. Export everything to Excel.
+30. Print professional timetables.
+31. Save timetable versions.
+32. Undo/redo timetable changes.
+33. Compare timetable versions.
+34. Explain why a schedule cannot be generated.
+
+---
+
+# 2. TECHNOLOGY STACK
+
+Unless there is a strong technical reason otherwise, use the following architecture:
+
+## Frontend
+
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* TanStack Query
+* Zustand where appropriate
+* React Hook Form
+* Zod
+* dnd-kit for drag-and-drop
+* Recharts for statistics
+* Full RTL support
+* Arabic-first UI
+* Responsive design
+
+## Backend
+
+Use:
+
+* Python
+* FastAPI
+* Pydantic
+* SQLAlchemy
+* Alembic
+
+The scheduling engine must be isolated as a dedicated service/module.
+
+## Scheduling Engine
+
+Use:
+
+**Google OR-Tools CP-SAT**
+
+Do NOT implement the main scheduling solver using naive random placement.
+
+The architecture should allow future solver implementations.
+
+Example:
+
+```text
+SchedulingEngine
+    ├── CP-SAT Solver
+    ├── Constraint Validator
+    ├── Conflict Analyzer
+    ├── Optimization Engine
+    └── Repair Engine
+```
+
+## Database
+
+Use:
+
+* PostgreSQL
+
+Use proper relational modeling and foreign keys.
+
+Do not store the entire timetable as one giant JSON document.
+
+JSON/JSONB may be used for flexible metadata, but core scheduling data must remain relational.
+
+## Excel
+
+Use:
+
+* Python openpyxl
+* xlsxwriter where useful
+
+Support:
+
+* formatted Excel
+* merged cells
+* Arabic RTL
+* headers
+* print areas
+* page setup
+* separate sheets
+* teacher sheets
+* class sheets
+* complete school timetable
+
+---
+
+# 3. SYSTEM ARCHITECTURE
+
+Use a modular architecture.
+
+```text
+Frontend
+   |
+   | REST API
+   v
+FastAPI Backend
+   |
+   ├── Authentication
+   ├── School Management
+   ├── Teachers
+   ├── Subjects
+   ├── Classes
+   ├── Rooms
+   ├── Lessons
+   ├── Constraints
+   ├── Timetable
+   ├── Reports
+   ├── Excel
+   └── Scheduling API
+            |
+            v
+      Scheduling Engine
+            |
+            v
+        OR-Tools
+            |
+            v
+       PostgreSQL
+```
+
+Keep the scheduling engine independent from HTTP controllers.
+
+---
+
+# 4. MULTI-SCHOOL ARCHITECTURE
+
+Design the application as multi-tenant from the beginning.
+
+Every school must be isolated.
+
+Example:
+
+```text
+Organization
+   └── School
+         ├── Academic Year
+         ├── Grades
+         ├── Sections
+         ├── Teachers
+         ├── Subjects
+         ├── Rooms
+         ├── Lessons
+         └── Timetables
+```
+
+A user must never be able to access another school's data.
+
+---
+
+# 5. USER ROLES
+
+Implement role-based access control.
+
+At minimum:
+
+### Super Admin
+
+Can manage the entire platform.
+
+### School Admin
+
+Can manage:
+
+* school settings
+* teachers
+* subjects
+* classes
+* rooms
+* scheduling
+* timetable
+* reports
+
+### Scheduler
+
+Can:
+
+* generate schedules
+* modify schedules
+* resolve conflicts
+* export schedules
+
+### Teacher
+
+Can view:
+
+* personal timetable
+* duties
+* free periods
+* workload
+
+### Viewer
+
+Read-only access.
+
+---
+
+# 6. SCHOOL INFORMATION
+
+Create school settings containing:
+
+* School name
+* Principal name
+* School logo
+* Academic year
+* Semester
+* Address
+* Phone
+* Email
+* Working days
+* Number of periods per day
+* Period duration
+* Break duration
+* Start time
+* End time
+
+Example:
+
+```text
+School:
+Al-Najah Secondary School
+
+Principal:
+Ahmed Ali
+
+Academic Year:
+2026/2027
+
+Working Days:
+Sunday
+Monday
+Tuesday
+Wednesday
+Thursday
+
+Periods:
+7 per day
+```
+
+---
+
+# 7. ACADEMIC STRUCTURE
+
+Support:
+
+```text
+Stage
+   ↓
+Grade
+   ↓
+Branch
+   ↓
+Section/Class
+```
+
+Example:
+
+```text
+Secondary School
+ ├── Grade 10
+ │    ├── 10-A
+ │    ├── 10-B
+ │    └── 10-C
+ │
+ ├── Grade 11
+ │    ├── Scientific
+ │    └── Literary
+ │
+ └── Grade 12
+      ├── Scientific
+      └── Literary
+```
+
+Each section should support:
+
+* name
+* code
+* grade
+* branch
+* student count
+* room
+* active/inactive status
+
+---
+
+# 8. SUBJECT MANAGEMENT
+
+Each subject must contain:
+
+* name
+* code
+* type
+* weekly periods
+* maximum periods per day
+* minimum gap between lessons
+* consecutive lesson requirement
+* preferred periods
+* forbidden periods
+* required room type
+* required equipment
+* priority
+
+Types:
+
+```text
+Theory
+Practical
+Laboratory
+Sport
+Activity
+Other
+```
+
+---
+
+# 9. TEACHER MANAGEMENT
+
+Each teacher must contain:
+
+```text
+ID
+Name
+Employee Number
+Specialization
+Email
+Phone
+Status
+Weekly Workload
+Minimum Daily Periods
+Maximum Daily Periods
+Required Seventh Periods
+Maximum Seventh Periods
+```
+
+Teacher capabilities:
+
+* subjects they can teach
+* classes they can teach
+* rooms they can use
+
+---
+
+# 10. TEACHER AVAILABILITY
+
+Support:
+
+### Available
+
+Teacher can teach.
+
+### Unavailable
+
+Teacher cannot teach.
+
+### Day Off
+
+Teacher has a complete day off.
+
+### Preferred
+
+Teacher prefers this slot.
+
+### Forbidden
+
+Teacher cannot be scheduled here.
+
+Example:
+
+```text
+Teacher:
+Mohammad
+
+Tuesday:
+Unavailable
+
+Wednesday:
+Periods 1-2 unavailable
+
+Thursday:
+Period 7 preferred
+```
+
+---
+
+# 11. TEACHER WORKLOAD / نصاب
+
+This must be a first-class feature.
+
+For each teacher calculate:
+
+```text
+Required Workload
+Assigned Teaching
+Duties
+Supervision
+Reserve
+Total
+Remaining
+Difference
+```
+
+Example:
+
+```text
+Teacher: Ahmed
+
+Required:
+24
+
+Teaching:
+21
+
+Duties:
+2
+
+Reserve:
+1
+
+Total:
+24
+
+Remaining:
+0
+```
+
+The system must clearly distinguish between:
+
+* teaching periods
+* duties
+* supervision
+* reserve
+* free periods
+
+---
+
+# 12. SEVENTH PERIOD / السابعة
+
+Implement a dedicated workload-balancing system for seventh periods.
+
+The administrator can configure:
+
+```text
+Target seventh periods
+Minimum
+Maximum
+Allowed difference
+Equalization priority
+```
+
+Example:
+
+```text
+Teacher A → 2
+Teacher B → 2
+Teacher C → 2
+Teacher D → 2
+```
+
+If exact equality is impossible, minimize deviation.
+
+Do not blindly force equality when it violates hard constraints.
+
+Show:
+
+```text
+Target: 2
+
+Teacher A: 2
+Teacher B: 2
+Teacher C: 3
+Teacher D: 1
+```
+
+And calculate the deviation.
+
+---
+
+# 13. LESSON MODEL
+
+A lesson is a real scheduling entity.
+
+It must contain:
+
+```text
+Teacher
+Subject
+Section
+Room
+Weekly Occurrences
+Duration
+Lesson Type
+Priority
+Required Consecutive Periods
+Preferred Slots
+Forbidden Slots
+```
+
+Example:
+
+```text
+Mathematics
+Teacher: Ahmad
+Class: 10-A
+Weekly periods: 5
+Duration: 1
+```
+
+The solver must place five separate occurrences.
+
+---
+
+# 14. TEAM TEACHING
+
+Support optional team teaching.
+
+Example:
+
+```text
+Teacher A
++
+Teacher B
+↓
+Same class
+Same subject
+Same period
+```
+
+The system must allow this only when explicitly configured.
+
+---
+
+# 15. ROOMS
+
+Support:
+
+* normal classroom
+* laboratory
+* computer lab
+* sports hall
+* auditorium
+* activity room
+* special rooms
+
+Each room:
+
+```text
+Name
+Type
+Capacity
+Equipment
+Available periods
+Unavailable periods
+```
+
+Constraints:
+
+* no double booking
+* class size must not exceed capacity
+* required room type must match
+* laboratory requirements must be respected
+
+---
+
+# 16. DUTIES / الإشغالات
+
+Create a dedicated module for:
+
+* supervision
+* duty
+* administrative work
+* reserve
+* activity
+* meeting
+* other assignments
+
+Each assignment must be schedulable.
+
+Example:
+
+```text
+Teacher: Ahmed
+Sunday
+Period: 3
+Assignment: Yard Supervision
+```
+
+This period must be unavailable for teaching.
+
+---
+
+# 17. REST / FREE PERIOD
+
+Teacher schedule cells must have states:
+
+```text
+Teaching
+Duty
+Supervision
+Reserve
+Unavailable
+Rest
+Free
+```
+
+Use different visual states.
+
+Do not confuse:
+
+"Free"
+
+with:
+
+"Unavailable".
+
+These are different concepts.
+
+---
+
+# 18. HARD CONSTRAINTS
+
+The following must never be violated.
+
+## Teacher conflict
+
+One teacher cannot teach two lessons simultaneously.
+
+## Class conflict
+
+One class cannot have two lessons simultaneously.
+
+## Room conflict
+
+One room cannot be used by two lessons simultaneously.
+
+## Teacher availability
+
+Do not schedule a teacher in forbidden slots.
+
+## Teacher day off
+
+Do not schedule teaching or duties on a teacher's day off unless explicitly overridden.
+
+## Required weekly lessons
+
+All required lessons must be scheduled.
+
+## Room compatibility
+
+Laboratory lessons must use compatible rooms.
+
+## Capacity
+
+Room capacity must support the class.
+
+## Duty conflict
+
+A teacher cannot teach while assigned to a duty.
+
+## Fixed lessons
+
+A fixed lesson cannot be moved automatically unless the administrator explicitly allows it.
+
+---
+
+# 19. SOFT CONSTRAINTS
+
+Optimize:
+
+1. Balanced subject distribution.
+2. Balanced teacher workload.
+3. Equalized seventh periods.
+4. Minimize teacher gaps.
+5. Avoid unnecessary consecutive lessons.
+6. Avoid too many lessons in one day.
+7. Respect teacher preferences.
+8. Respect preferred periods.
+9. Avoid unwanted first periods.
+10. Avoid unwanted last periods.
+11. Avoid repeated same subject in one day.
+12. Spread lessons throughout the week.
+13. Reduce idle gaps.
+14. Improve overall timetable quality.
+
+---
+
+# 20. CONSTRAINT PRIORITY SYSTEM
+
+Implement weighted constraints.
+
+Example:
+
+```text
+HARD:
+1000000
+
+CRITICAL:
+100000
+
+VERY_IMPORTANT:
+10000
+
+IMPORTANT:
+1000
+
+PREFERRED:
+100
+
+OPTIONAL:
+10
+```
+
+The optimization objective should minimize the weighted penalty.
+
+---
+
+# 21. SCHEDULING ALGORITHM
+
+Use OR-Tools CP-SAT.
+
+Represent each lesson occurrence as a scheduling variable.
+
+Conceptually:
+
+```text
+X(lesson, day, period, room)
+```
+
+where:
+
+```text
+X = 1
+```
+
+means the lesson occupies that slot.
+
+Add constraints for:
+
+* teacher
+* class
+* room
+* availability
+* workload
+* duties
+* rooms
+* fixed lessons
+* consecutive lessons
+* weekly occurrence count
+
+Then create an optimization objective.
+
+Example:
+
+```text
+Minimize(
+    teacher_gaps * weight
+    +
+    subject_clustering * weight
+    +
+    seventh_period_deviation * weight
+    +
+    unwanted_slots * weight
+)
+```
+
+---
+
+# 22. SCHEDULING PIPELINE
+
+When the administrator clicks:
+
+**Generate Timetable**
+
+execute:
+
+```text
+1. Validate input data
+2. Validate teachers
+3. Validate subjects
+4. Validate classes
+5. Validate rooms
+6. Validate workloads
+7. Validate availability
+8. Validate lesson requirements
+9. Detect obvious impossible constraints
+10. Build CP-SAT model
+11. Add hard constraints
+12. Add soft constraints
+13. Solve
+14. Optimize
+15. Validate generated timetable
+16. Calculate quality score
+17. Save timetable version
+18. Return results
+```
+
+---
+
+# 23. PRE-SOLVER VALIDATION
+
+Before starting the solver, detect obvious impossible situations.
+
+Examples:
+
+```text
+Teacher workload > available slots
+
+Class requires 35 lessons
+but only 30 available slots exist.
+
+Teacher requires 25 lessons
+but availability allows only 20.
+
+Laboratory required
+but no compatible laboratory exists.
+
+Three classes require the same teacher
+at the same fixed period.
+```
+
+Return actionable explanations.
+
+---
+
+# 24. EXPLAINABLE FAILURE
+
+Never simply return:
+
+```text
+Solver failed.
+```
+
+Return:
+
+```text
+No feasible timetable was found.
+
+Primary conflicts:
+
+1. Teacher Ahmad requires 24 periods.
+2. Only 20 valid periods are available.
+3. Tuesday is marked unavailable.
+4. Three fixed lessons occupy Thursday period 7.
+5. Class 10-A requires five mathematics lessons.
+6. Only three valid slots remain.
+```
+
+Then provide suggestions.
+
+Example:
+
+```text
+Possible actions:
+
+[Change Teacher Availability]
+
+[Move Fixed Lesson]
+
+[Allow Thursday Period 7]
+
+[Assign Another Teacher]
+
+[Relax Constraint]
+```
+
+---
+
+# 25. AUTO CONFLICT RESOLUTION
+
+When the timetable contains a conflict or the administrator attempts a conflicting drag-and-drop operation, analyze alternatives.
+
+Example:
+
+Teacher A:
+
+```text
+Monday 3
+```
+
+is occupied.
+
+User tries to move:
+
+```text
+Math → Monday 3
+```
+
+The system should detect:
+
+```text
+Conflict:
+Teacher A already teaches Physics at Monday 3.
+```
+
+Then offer possible swaps:
+
+```text
+Suggested alternatives:
+
+Monday 4
+Tuesday 2
+Tuesday 5
+Wednesday 3
+```
+
+Rank alternatives based on constraint cost.
+
+---
+
+# 26. SMART SWAP
+
+Implement intelligent swap suggestions.
+
+If:
+
+```text
+Lesson A
+```
+
+cannot move to:
+
+```text
+Monday 3
+```
+
+try:
+
+```text
+A ↔ B
+```
+
+Then validate the resulting timetable.
+
+Only present swaps that maintain all hard constraints.
+
+---
+
+# 27. DRAG AND DROP TIMETABLE
+
+Use:
+
+**dnd-kit**
+
+The timetable should behave like a professional scheduling application.
+
+Grid:
+
+```text
+             P1      P2      P3      P4      P5      P6      P7
+
+Sunday
+Monday
+Tuesday
+Wednesday
+Thursday
+```
+
+Each cell can contain:
+
+```text
+Subject
+Teacher
+Room
+Class
+Status
+```
+
+Dragging a lesson should:
+
+1. Detect target slot.
+2. Validate hard constraints.
+3. Calculate soft constraint penalty.
+4. Show preview.
+5. Accept or reject.
+6. If conflict exists, show exact reason.
+7. Offer alternatives.
+
+---
+
+# 28. DRAG PREVIEW
+
+While dragging:
+
+### Valid target
+
+Show:
+
+```text
+✓ Valid slot
+```
+
+### Hard conflict
+
+Show:
+
+```text
+✕ Teacher conflict
+```
+
+### Soft violation
+
+Show:
+
+```text
+⚠ This move increases teacher gaps
+```
+
+Allow the administrator to decide whether to accept soft violations.
+
+---
+
+# 29. TIMETABLE VIEWS
+
+Implement:
+
+## School View
+
+Complete school timetable.
+
+## Teacher View
+
+Individual teacher timetable.
+
+Display:
+
+```text
+Teaching
+Duty
+Reserve
+Rest
+Free
+Unavailable
+```
+
+## Class View
+
+Individual class timetable.
+
+## Room View
+
+Individual room timetable.
+
+## Subject View
+
+Where and when each subject is taught.
+
+---
+
+# 30. STUDENT / CLASS TIMETABLE
+
+Students should see only the timetable relevant to their class.
+
+Example:
+
+```text
+10-A
+
+Sunday:
+Math
+Arabic
+English
+Physics
+...
+
+Monday:
+...
+```
+
+Provide print-friendly view.
+
+---
+
+# 31. TEACHER TIMETABLE
+
+Example:
+
+```text
+Teacher: Ahmed
+
+          1       2       3       4       5       6       7
+
+Sunday    Math    Math    Free    Duty    Arabic  Free    Math
+Monday    ...
+```
+
+At the bottom:
+
+```text
+Teaching periods: 22
+Duties: 1
+Reserve: 1
+Total workload: 24
+Free periods: 5
+Seventh periods: 2
+```
+
+---
+
+# 32. DASHBOARD
+
+Create a professional dashboard.
+
+Show:
+
+```text
+Teachers: 84
+Classes: 32
+Subjects: 27
+Rooms: 41
+
+Lessons:
+486
+
+Scheduled:
+486 / 486
+
+Conflicts:
+0
+
+Teacher workload:
+96% balanced
+
+Seventh periods:
+92% balanced
+
+Timetable quality:
+94%
+```
+
+These numbers must come from real database data.
+
+Never hardcode dashboard statistics.
+
+---
+
+# 33. TIMETABLE QUALITY
+
+Calculate measurable metrics:
+
+```text
+Hard constraint violations
+Soft constraint violations
+Teacher gap score
+Subject distribution score
+Workload balance score
+Seventh-period balance score
+Room utilization
+Overall optimization score
+```
+
+Do not call it "AI magic".
+
+Show how the score was calculated.
+
+---
+
+# 34. MANUAL LOCKING
+
+Administrators must be able to lock lessons.
+
+Example:
+
+```text
+Physics
+10-A
+Tuesday
+Period 3
+Teacher Ahmad
+Room Lab 1
+LOCKED
+```
+
+The solver must preserve locked lessons.
+
+Support:
+
+```text
+Lock
+Unlock
+Lock entire day
+Lock teacher
+Lock class
+```
+
+---
+
+# 35. VERSION CONTROL
+
+Every generated timetable should create a version.
+
+Example:
+
+```text
+Version 1
+Initial generation
+
+Version 2
+After manual modifications
+
+Version 3
+After optimization
+```
+
+Store:
+
+* version number
+* created by
+* created at
+* reason
+* statistics
+* timetable snapshot
+
+Allow:
+
+```text
+Restore version
+Compare versions
+Duplicate version
+```
+
+---
+
+# 36. UNDO / REDO
+
+Manual timetable modifications must support:
+
+```text
+Undo
+Redo
+```
+
+Prefer command/event-based history for timetable edits.
+
+---
+
+# 37. EXCEL EXPORT
+
+Implement one-click export.
+
+Export:
+
+### Full School Timetable
+
+One sheet or multiple sheets.
+
+### Teachers
+
+One sheet per teacher.
+
+### Classes
+
+One sheet per class.
+
+### Rooms
+
+One sheet per room.
+
+### Workload
+
+Teacher workload report.
+
+### Conflicts
+
+Conflict report.
+
+### Duties
+
+Duty report.
+
+### Free periods
+
+Teacher free-period report.
+
+Use professional formatting.
+
+---
+
+# 38. EXCEL IMPORT
+
+Support importing:
+
+* teachers
+* subjects
+* classes
+* rooms
+* lessons
+
+Provide a validation preview before committing imported data.
+
+Example:
+
+```text
+Imported:
+84 teachers
+
+Valid:
+82
+
+Errors:
+2
+
+Warnings:
+5
+```
+
+Do not partially corrupt the database if import fails.
+
+Use transactional import.
+
+---
+
+# 39. PRINTING
+
+Create professional printable layouts:
+
+* School timetable
+* Teacher timetable
+* Class timetable
+* Room timetable
+* Duties
+* Workload report
+
+Support:
+
+* A4
+* Landscape
+* Arabic RTL
+* school logo
+* school name
+* academic year
+* principal name
+* page numbers
+
+---
+
+# 40. REPORTING
+
+Create reports for:
+
+### Teacher workload
+
+```text
+Teacher
+Required
+Teaching
+Duties
+Reserve
+Total
+Remaining
+Seventh periods
+```
+
+### Class workload
+
+### Subject distribution
+
+### Room utilization
+
+### Teacher free periods
+
+### Teacher days off
+
+### Conflicts
+
+### Scheduling quality
+
+---
+
+# 41. SEARCH AND FILTERING
+
+Every major screen should support:
+
+* search
+* filtering
+* sorting
+* pagination where necessary
+
+Examples:
+
+```text
+Search teacher
+Search class
+Search subject
+Filter by grade
+Filter by branch
+Filter by room
+Filter by day
+```
+
+---
+
+# 42. DATA VALIDATION
+
+Use Pydantic + Zod.
+
+Validate:
+
+* duplicate teacher IDs
+* duplicate subject codes
+* duplicate class codes
+* invalid workloads
+* impossible lesson counts
+* missing teachers
+* missing rooms
+* invalid availability
+* conflicting fixed lessons
+
+---
+
+# 43. DATABASE DESIGN
+
+Design normalized PostgreSQL tables at minimum:
+
+```text
+users
+organizations
+schools
+academic_years
+school_days
+periods
+grades
+branches
+sections
+students
+subjects
+teachers
+teacher_subjects
+teacher_sections
+teacher_availability
+teacher_days_off
+teacher_preferences
+teacher_workloads
+rooms
+room_availability
+lessons
+lesson_occurrences
+lesson_requirements
+duties
+duty_assignments
+constraints
+constraint_weights
+timetable_versions
+timetable_entries
+timetable_locks
+timetable_change_history
+scheduling_runs
+scheduling_conflicts
+exports
+audit_logs
+```
+
+Use:
+
+* UUID primary keys
+* timestamps
+* foreign keys
+* indexes
+* unique constraints
+* soft deletion where appropriate
+
+---
+
+# 44. API DESIGN
+
+Create REST APIs.
+
+Examples:
+
+```text
+POST /api/auth/login
+
+GET /api/schools
+POST /api/schools
+
+GET /api/teachers
+POST /api/teachers
+PUT /api/teachers/{id}
+DELETE /api/teachers/{id}
+
+GET /api/subjects
+POST /api/subjects
+
+GET /api/classes
+POST /api/classes
+
+GET /api/rooms
+POST /api/rooms
+
+GET /api/lessons
+POST /api/lessons
+
+POST /api/scheduling/validate
+POST /api/scheduling/generate
+POST /api/scheduling/optimize
+POST /api/scheduling/repair
+
+GET /api/timetables
+GET /api/timetables/{id}
+
+POST /api/timetables/{id}/move
+POST /api/timetables/{id}/swap
+
+POST /api/timetables/{id}/lock
+POST /api/timetables/{id}/unlock
+
+GET /api/reports/workload
+GET /api/reports/conflicts
+
+POST /api/export/excel
+```
+
+Use proper HTTP status codes.
+
+---
+
+# 45. REAL-TIME SCHEDULING JOBS
+
+Scheduling can be computationally expensive.
+
+Do not block the HTTP request for long-running solves.
+
+Implement a job model:
+
+```text
+SchedulingJob
+
+id
+school_id
+status
+progress
+started_at
+finished_at
+solver_status
+result
+error
+```
+
+Statuses:
+
+```text
+QUEUED
+VALIDATING
+SOLVING
+OPTIMIZING
+COMPLETED
+FAILED
+CANCELLED
+```
+
+Frontend should display progress.
+
+Example:
+
+```text
+Validating data...      ✓
+Building constraints... ✓
+Finding solution...     ███████░░░ 72%
+Optimizing...           █████████░ 91%
+Saving timetable...     ✓
+```
+
+---
+
+# 46. PERFORMANCE
+
+Design for schools with potentially:
+
+```text
+100+ teachers
+50+ classes
+1000+ weekly lessons
+10+ periods/day
+6-7 working days
+```
+
+Use:
+
+* database indexes
+* efficient queries
+* solver time limits
+* incremental solving where possible
+* caching where useful
+* background jobs
+* pagination
+* frontend virtualization where necessary
+
+---
+
+# 47. SOLVER TIME LIMIT
+
+Allow administrator to configure:
+
+```text
+Fast
+Balanced
+Deep Optimization
+```
+
+Example:
+
+```text
+Fast:
+10 seconds
+
+Balanced:
+60 seconds
+
+Deep:
+300 seconds
+```
+
+Never make the UI appear frozen.
+
+---
+
+# 48. INCREMENTAL REPAIR
+
+If an administrator manually changes one lesson, do NOT regenerate the entire school timetable unnecessarily.
+
+Attempt:
+
+```text
+Local repair
+```
+
+first.
+
+Example:
+
+```text
+Move one lesson
+       ↓
+Check conflicts
+       ↓
+Try local swap
+       ↓
+Repair affected lessons
+       ↓
+Keep rest of timetable unchanged
+```
+
+Only perform a complete regeneration if explicitly requested.
+
+---
+
+# 49. CONFLICT CENTER
+
+Create a dedicated Conflict Center.
+
+Show:
+
+```text
+Critical
+Warnings
+Optimization issues
+```
+
+Example:
+
+```text
+CRITICAL
+
+Teacher Ahmad:
+Double booked Monday Period 3.
+
+Class 10-A:
+Two subjects scheduled Monday Period 4.
+
+Room Lab 1:
+Double booked Tuesday Period 2.
+```
+
+Clicking a conflict should navigate directly to the timetable location.
+
+---
+
+# 50. AUTOMATIC SUGGESTIONS
+
+For every conflict, generate possible actions.
+
+Example:
+
+```text
+Conflict:
+Teacher Ahmad is unavailable Tuesday Period 4.
+
+Suggestions:
+
+1. Move Math 10-A → Tuesday Period 5
+2. Swap Math with Physics
+3. Assign Teacher Omar
+4. Change teacher availability
+```
+
+Every suggestion must be validated against hard constraints before being displayed.
+
+---
+
+# 51. USER EXPERIENCE
+
+The interface should feel like a professional desktop scheduling application.
+
+Avoid:
+
+* excessive animations
+* unnecessary cards
+* huge empty spaces
+* generic SaaS templates
+* fake statistics
+* placeholder tables
+
+Prioritize:
+
+* dense useful information
+* keyboard shortcuts
+* fast navigation
+* drag-and-drop
+* context menus
+* filters
+* clear conflict indicators
+* compact timetable grid
+
+---
+
+# 52. KEYBOARD SHORTCUTS
+
+Implement:
+
+```text
+Ctrl + Z → Undo
+Ctrl + Y → Redo
+Ctrl + S → Save
+Delete → Remove lesson
+Escape → Cancel drag
+F → Find
+```
+
+---
+
+# 53. CONTEXT MENU
+
+Right-clicking a lesson should provide:
+
+```text
+Edit
+Move
+Swap
+Lock
+Unlock
+Duplicate
+Find alternatives
+Show teacher
+Show class
+Show room
+Delete
+```
+
+---
+
+# 54. MOBILE / TABLET
+
+The primary interface is desktop-first because timetable creation is complex.
+
+However:
+
+* teacher view
+* class view
+* student view
+* reports
+
+must remain usable on tablets and mobile devices.
+
+---
+
+# 55. SECURITY
+
+Implement:
+
+* secure authentication
+* password hashing
+* JWT/session security
+* RBAC
+* tenant isolation
+* server-side authorization
+* input validation
+* rate limiting where appropriate
+* audit logs
+* secure file uploads
+* protected Excel generation endpoints
+
+Never trust frontend authorization.
+
+---
+
+# 56. AUDIT LOG
+
+Record important operations:
+
+```text
+User
+Action
+Entity
+Old Value
+New Value
+Timestamp
+IP if available
+```
+
+Examples:
+
+```text
+Teacher updated
+Lesson moved
+Timetable generated
+Constraint changed
+Timetable restored
+Excel exported
+```
+
+---
+
+# 57. TESTING
+
+Do not finish the project without automated tests.
+
+Implement:
+
+## Unit tests
+
+* workload calculation
+* conflict detection
+* constraint generation
+* seventh-period calculation
+* timetable validation
+* Excel generation
+
+## Solver tests
+
+Test:
+
+```text
+Teacher conflict
+Class conflict
+Room conflict
+Unavailable teacher
+Day off
+Fixed lessons
+Laboratory requirements
+Workload
+Seventh periods
+```
+
+## Integration tests
+
+Test:
+
+```text
+Create school
+Create teachers
+Create subjects
+Create classes
+Create lessons
+Generate timetable
+Modify timetable
+Export Excel
+```
+
+## E2E tests
+
+Use Playwright.
+
+Test the actual UI:
+
+```text
+Login
+Create school
+Add teachers
+Add classes
+Add subjects
+Add lessons
+Generate timetable
+Drag lesson
+Resolve conflict
+Export Excel
+Open teacher timetable
+Open class timetable
+```
+
+---
+
+# 58. DEMO DATA
+
+Provide an optional seed dataset.
+
+Example:
+
+```text
+School:
+Al-Najah School
+
+Teachers:
+30
+
+Classes:
+15
+
+Subjects:
+12
+
+Rooms:
+18
+
+Weekly lessons:
+250+
+```
+
+The seed data must be realistic enough to stress-test the solver.
+
+---
+
+# 59. NO FAKE FUNCTIONALITY
+
+STRICT RULE:
+
+Never implement:
+
+```text
+fake solver
+random timetable
+hardcoded statistics
+fake Excel button
+fake conflict detection
+fake progress
+fake API responses
+```
+
+Every displayed value must originate from real application state.
+
+If a feature is not implemented yet, explicitly mark it as:
+
+```text
+NOT IMPLEMENTED
+```
+
+Do not pretend it works.
+
+---
+
+# 60. DEVELOPMENT PROCESS
+
+Do NOT attempt to generate the entire application blindly in one step.
+
+Use the following phases.
+
+## PHASE 1 — Architecture
+
+Produce:
+
+* architecture
+* folder structure
+* database schema
+* ERD
+* API design
+* scheduling model
+
+Then implement.
+
+## PHASE 2 — Database
+
+Implement:
+
+* PostgreSQL
+* migrations
+* models
+* seed system
+
+Run migrations and tests.
+
+## PHASE 3 — Backend
+
+Implement:
+
+* authentication
+* school management
+* teachers
+* subjects
+* classes
+* rooms
+* lessons
+* availability
+* duties
+* workload
+
+## PHASE 4 — Scheduling Engine
+
+Implement:
+
+* hard constraints
+* soft constraints
+* CP-SAT
+* optimization
+* validation
+* conflict explanations
+* repair
+* swap suggestions
+
+## PHASE 5 — Frontend
+
+Implement:
+
+* dashboard
+* management screens
+* timetable grid
+* teacher view
+* class view
+* room view
+
+## PHASE 6 — Drag & Drop
+
+Implement:
+
+* dnd-kit
+* validation
+* preview
+* swap
+* repair
+* undo/redo
+* locking
+
+## PHASE 7 — Excel & Reports
+
+Implement:
+
+* Excel export
+* Excel import
+* reports
+* print layouts
+
+## PHASE 8 — Testing
+
+Implement:
+
+* unit tests
+* integration tests
+* solver tests
+* Playwright E2E tests
+
+## PHASE 9 — Production Hardening
+
+Implement:
+
+* error handling
+* logging
+* performance
+* security
+* database indexes
+* backups
+* monitoring
+
+---
+
+# 61. REQUIRED PROJECT STRUCTURE
+
+Use a clean monorepo structure similar to:
+
+```text
+school-timetable/
+│
+├── apps/
+│   ├── web/
+│   │   ├── app/
+│   │   ├── components/
+│   │   ├── features/
+│   │   ├── hooks/
+│   │   ├── lib/
+│   │   └── tests/
+│   │
+│   └── api/
+│       ├── app/
+│       │   ├── api/
+│       │   ├── models/
+│       │   ├── schemas/
+│       │   ├── services/
+│       │   ├── repositories/
+│       │   ├── scheduling/
+│       │   ├── reports/
+│       │   └── tests/
+│       │
+│       └── migrations/
+│
+├── packages/
+│   ├── shared-types/
+│   └── scheduling-core/
+│
+├── docker/
+├── docs/
+├── scripts/
+├── docker-compose.yml
+├── README.md
+└── .env.example
+```
+
+---
+
+# 62. REQUIRED DOCUMENTATION
+
+Create:
+
+```text
+README.md
+
+ARCHITECTURE.md
+
+DATABASE.md
+
+SCHEDULING_ENGINE.md
+
+API.md
+
+DEPLOYMENT.md
+
+TESTING.md
+
+USER_GUIDE.md
+```
+
+Explain how the solver works.
+
+---
+
+# 63. DEFINITION OF DONE
+
+The project is NOT considered complete until all of the following work:
+
+### School
+
+* [ ] Create school
+* [ ] Configure academic year
+* [ ] Configure days
+* [ ] Configure periods
+
+### Academic
+
+* [ ] Grades
+* [ ] Branches
+* [ ] Classes
+* [ ] Students
+
+### Teachers
+
+* [ ] Teachers
+* [ ] Subjects
+* [ ] Specializations
+* [ ] Workload
+* [ ] Availability
+* [ ] Days off
+* [ ] Preferences
+
+### Scheduling
+
+* [ ] Lessons
+* [ ] Rooms
+* [ ] Duties
+* [ ] Rest periods
+* [ ] Seventh periods
+* [ ] Hard constraints
+* [ ] Soft constraints
+* [ ] CP-SAT solver
+* [ ] Optimization
+* [ ] Conflict detection
+* [ ] Conflict explanation
+* [ ] Auto repair
+* [ ] Swap suggestions
+
+### Timetable
+
+* [ ] School timetable
+* [ ] Teacher timetable
+* [ ] Class timetable
+* [ ] Room timetable
+* [ ] Drag and drop
+* [ ] Locking
+* [ ] Undo/redo
+
+### Reports
+
+* [ ] Workload
+* [ ] Free periods
+* [ ] Duties
+* [ ] Conflicts
+* [ ] Room utilization
+* [ ] Quality metrics
+
+### Export
+
+* [ ] Excel
+* [ ] Print
+* [ ] Teacher Excel
+* [ ] Class Excel
+* [ ] School Excel
+
+### Engineering
+
+* [ ] Unit tests
+* [ ] Integration tests
+* [ ] Solver tests
+* [ ] E2E tests
+* [ ] Security
+* [ ] Audit logs
+* [ ] Documentation
+
+---
+
+# 64. IMPORTANT ENGINEERING RULES
+
+Follow these rules throughout development:
+
+1. Do not create fake functionality.
+2. Do not hardcode business data.
+3. Do not put scheduling logic inside React components.
+4. Do not put solver logic inside API controllers.
+5. Keep the solver independently testable.
+6. Keep database models normalized.
+7. Use transactions for important operations.
+8. Validate data on backend and frontend.
+9. Never trust client-side conflict validation.
+10. Every manual timetable modification must be validated server-side.
+11. Preserve timetable versions.
+12. Do not regenerate the entire timetable for a simple manual move unless necessary.
+13. Prefer incremental repair.
+14. Explain solver failures.
+15. Keep the system extensible.
+16. Write tests while implementing features.
+17. Never leave TODO placeholders for core functionality.
+18. Never claim a feature works until it has been tested.
+
+---
+
+# 65. FIRST TASK
+
+Before writing large amounts of code:
+
+1. Analyze the complete requirements.
+2. Identify ambiguities.
+3. Propose the final architecture.
+4. Propose the PostgreSQL schema.
+5. Explain the CP-SAT scheduling model.
+6. Explain how lessons, occurrences, slots, teachers, classes, and rooms will be represented.
+7. Produce the project folder structure.
+8. Produce the API specification.
+9. Produce the implementation roadmap.
+10. Identify the highest-risk technical areas.
+
+Then start implementing **Phase 1**.
+
+After each phase:
+
+1. Run tests.
+2. Fix errors.
+3. Verify database integrity.
+4. Verify APIs.
+5. Verify UI.
+6. Report exactly what was implemented.
+7. Report what remains.
+8. Continue to the next phase only after the current phase is stable.
+
+Do not skip phases.
+
+---
+
+# 66. FINAL PRODUCT EXPECTATION
+
+The final product should feel like a real professional timetable management application rather than a generic CRUD dashboard.
+
+The administrator should be able to enter:
+
+```text
+School
+↓
+Grades
+↓
+Classes
+↓
+Subjects
+↓
+Teachers
+↓
+Rooms
+↓
+Teacher availability
+↓
+Workloads
+↓
+Duties
+↓
+Lessons
+↓
+Constraints
+```
+
+Then click:
+
+# GENERATE TIMETABLE
+
+and receive:
+
+```text
+Complete School Timetable
++
+Teacher Timetables
++
+Class Timetables
++
+Room Timetables
++
+Duties
++
+Free/Rest Periods
++
+Workload Reports
++
+Seventh Period Analysis
++
+Conflict Analysis
++
+Excel Export
++
+Printable Reports
+```
+
+The system must also allow the administrator to manually adjust the generated timetable through drag-and-drop while protecting hard constraints.
+
+The ultimate goal is:
+
+**A production-ready intelligent school timetable system with the workflow and usability of professional timetable software, powered by a real constraint optimization engine rather than random placement or mock data.**
